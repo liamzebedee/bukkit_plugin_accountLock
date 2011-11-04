@@ -1,12 +1,12 @@
 A plugin for the Minecraft Server Mod Bukkit,
 which adds a second layer of security, incorporating passwords in-game
 
-@version 1.0.0
+@version 0.2
 @author liamzebedee
 
 Created by Liam Edwards-Playne
 Cryptum Technologies - http://cryptum.net
-Licensed under the MIT license
+Licensed under the GNU General Public License version 3 (GPLv3)
 
 Copyright (C) 2011 by Liam Edwards-Playne
 
