@@ -10,7 +10,7 @@ public class PlayerBlockListener extends BlockListener {
 		this.plugin = instance;
 	}
 	public boolean accountLockOn(Player p){
-		if(plugin.lockedPlayers.contains(p)){
+		if(plugin.lockedPlayers.contains(p.getName())){
 			return true;
 		}
 		return false;

@@ -19,8 +19,10 @@ public class AccountLockedAlert implements Runnable {
 	
 	public void run() 
 	{
-		for(Player p : plugin.lockedPlayers){
-			p.sendMessage(ChatColor.RED+"[AccountLock]"+ChatColor.WHITE+" - This account is currently locked." +
+		for(String playerName : plugin.lockedPlayers){
+			plugin.getServer().getPlayer(playerName).
+			sendMessage(ChatColor.RED+"[AccountLock]"+ChatColor.WHITE+
+			" - This account is currently locked." +
 			" Please use '/account unlock [password]' to continue playing!");
 		}
     }

@@ -17,7 +17,7 @@ public class PlayerActionListener extends PlayerListener {
 	}
 	public boolean accountLockOn(PlayerEvent event){
 		Player p = event.getPlayer();
-		if(plugin.lockedPlayers.contains(p)){			
+		if(plugin.lockedPlayers.contains(p.getName())){			
 			return true;
 		}
 		return false;
@@ -76,7 +76,14 @@ public class PlayerActionListener extends PlayerListener {
 	public void onPlayerJoin(PlayerJoinEvent event){
 		Player p = event.getPlayer();
 		if(plugin.getConfig().getBoolean(p.getName()+".accountAutoLockOn")){
-			plugin.lockedPlayers.add(event.getPlayer());
+			plugin.lockedPlayers.add(p.getName());
 		}		
+	}
+	public void onPlayerQuit(PlayerQuitEvent event){
+		Player p = event.getPlayer();
+		if(plugin.getConfig().getBoolean(p.getName()+".accountLockOn")){
+			plugin.lockedPlayers.remove(p.getName());
+			plugin.getConfig().set(p.getName()+".accountLockOn",false);
+		}
 	}
 }

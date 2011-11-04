@@ -21,7 +21,7 @@ import org.bukkit.util.Vector;
 public class AccountLockMain extends JavaPlugin {
  
 	Logger log = Logger.getLogger("Minecraft");
-	ArrayList<Player> lockedPlayers = new ArrayList<Player>();
+	ArrayList<String> lockedPlayers = new ArrayList<String>();
 	Vector defaultVelocity = new Vector(-4.9E-324,-0.0784000015258789,4.9E-324);
  
 	public void onEnable(){
@@ -40,6 +40,7 @@ public class AccountLockMain extends JavaPlugin {
 		pm.registerEvent(Event.Type.PLAYER_CHAT, playerActionListener, Event.Priority.Lowest, this);
 		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerActionListener, Event.Priority.Lowest, this);
 		pm.registerEvent(Event.Type.PLAYER_PICKUP_ITEM, playerActionListener, Event.Priority.Lowest, this);
+		pm.registerEvent(Event.Type.PLAYER_QUIT, playerActionListener, Event.Priority.Lowest, this);
 		
 		pm.registerEvent(Event.Type.BLOCK_PLACE, playerBlockListener, Event.Priority.Lowest, this);
 		pm.registerEvent(Event.Type.BLOCK_BREAK, playerBlockListener, Event.Priority.Lowest, this);
@@ -95,7 +96,7 @@ public class AccountLockMain extends JavaPlugin {
 				boolean locked = false;
 				p.sendMessage(ChatColor.RED+
 						"[AccountLock]");
-				if(lockedPlayers.contains(p)){locked = true;}
+				if(lockedPlayers.contains(p.getName())){locked = true;}
 				p.sendMessage("Account Locked? "+locked);
 				p.sendMessage("Use /account help [command] for help on specific commands");
 				p.sendMessage("/account setPassword [password]");
@@ -106,8 +107,23 @@ public class AccountLockMain extends JavaPlugin {
 					p.sendMessage("/account lockR [displayName]");
 					p.sendMessage("/account unlockR [displayName]");
 					p.sendMessage("/account resetPassword [displayName]");
+					p.sendMessage("/account status [displayName]");
 				}
 				return true;
+			}
+			
+			if(args[0].equals("status") && p.hasPermission("accountLock.admin")){
+				String playerName = args[1];
+				if(this.getConfig().getBoolean(playerName+".accountAutoLockOn") || this.getConfig().getBoolean(playerName+".accountLockOn")){
+					p.sendMessage(ChatColor.RED+
+					"[AccountLock]");
+					p.sendMessage("Player '"+playerName+"' account is "+ChatColor.BLUE+"locked");
+				}
+				else{
+					p.sendMessage(ChatColor.RED+
+					"[AccountLock]");
+					p.sendMessage("Player '"+playerName+"' account is "+ChatColor.AQUA+"unlocked");
+				}
 			}
 			
 			if(args[0].equals("help") && p.hasPermission("accountLock.basic")){
@@ -147,19 +163,28 @@ public class AccountLockMain extends JavaPlugin {
 					p.sendMessage(ChatColor.RED+
 					"[AccountLock]");
 					p.sendMessage("lockR [displayName]");
-					p.sendMessage("Remotely locks a persons account by their displayName");
+					p.sendMessage("Remotely locks a persons account by their displayName" +
+							"If they are offline, it uses the displayName as their username instead");
 				}
 				if(helpCommand.equals("unlockR") && p.hasPermission("accountLock.admin")){
 					p.sendMessage(ChatColor.RED+
 					"[AccountLock]");
-					p.sendMessage("lockR [displayName]");
+					p.sendMessage("unlockR [displayName]");
 					p.sendMessage("Remotely UNlocks a persons account by their displayName");
 				}
 				if(helpCommand.equals("resetPassword") && p.hasPermission("accountLock.admin")){
 					p.sendMessage(ChatColor.RED+
 					"[AccountLock]");
 					p.sendMessage("lockR [displayName]");
-					p.sendMessage("Remotely resets a persons account password by their displayName");
+					p.sendMessage("Remotely resets a persons account password by their displayName" +
+							"If they are offline, it uses the displayName as their username instead");
+				}
+				if(helpCommand.equals("status") && p.hasPermission("accountLock.admin")){
+					p.sendMessage(ChatColor.RED+
+					"[AccountLock]");
+					p.sendMessage("status [displayName]");
+					p.sendMessage("Displays the account status of a user (locked or not) by their displayName" +
+							"If they are offline, it uses the displayName as their username instead");
 				}
 			}
 			
@@ -184,7 +209,7 @@ public class AccountLockMain extends JavaPlugin {
 						this.getConfig().set(p.getName()+".accountLockOn", true);
 						this.getConfig().set(p.getName()+".accountAutoLockOn", true);
 						this.saveConfig();
-						lockedPlayers.add(p);
+						lockedPlayers.add(p.getName());
 						p.sendMessage(ChatColor.RED+
 								"[AccountLock]"+ChatColor.WHITE+" - " +
 									"Your account has been locked");
@@ -198,11 +223,29 @@ public class AccountLockMain extends JavaPlugin {
 					}
 			}
 			
+			if(args[0].equals("tempLock") && p.hasPermission("accountLock.basic")){
+				if(this.getConfig().getString(p.getName()+".accountPasswordHash") != null){
+					this.getConfig().set(p.getName()+".accountLockOn", true);
+					this.saveConfig();
+					lockedPlayers.add(p.getName());
+					p.sendMessage(ChatColor.RED+
+							"[AccountLock]"+ChatColor.WHITE+" - " +
+								"Your account has been locked for this login");
+					return true;
+				}
+				else{
+					p.sendMessage(ChatColor.RED+
+							"[AccountLock]"+ChatColor.WHITE+" - " +
+									"ERROR! You cannot lock your account before setting a password");
+					return true;
+				}
+			}
+			
 			if(args[0].equals("killLock") && p.hasPermission("accountLock.basic")){
 				this.getConfig().set(p.getName()+".accountAutoLockOn", false);
 				this.getConfig().set(p.getName()+".accountLockOn", false);
 				this.saveConfig();
-				lockedPlayers.remove(p);
+				lockedPlayers.remove(p.getName());
 				p.sendMessage(ChatColor.RED+
 						"[AccountLock]"+ChatColor.WHITE+" - " +
 								"Your account has been perma-unlocked");
@@ -218,7 +261,7 @@ public class AccountLockMain extends JavaPlugin {
 				if(inputPassword.equals(cachePassword)){
 					this.getConfig().set(p.getName()+".accountLockOn", false);
 					this.saveConfig();
-					lockedPlayers.remove(p);
+					lockedPlayers.remove(p.getName());
 					log.info("[AccountLock] Player:"+p.getName()+" successfully logged in from IP:"+p.getAddress());
 					p.setVelocity(defaultVelocity);
 					p.setFallDistance(0);
@@ -236,12 +279,14 @@ public class AccountLockMain extends JavaPlugin {
 			if(args[0].equals("unlockR")){
 				// We are doing a remote unlock
 				if(p.hasPermission("accountLock.admin")){ //If player has admin perms
+					boolean playerOnline = false;
 					for(Player onlinePlayer : this.getServer().getOnlinePlayers()){ 
 						if(onlinePlayer.getDisplayName().equals(args[1])){ 
 							Player target = this.getServer().getPlayer(args[1]);
+							this.getConfig().set(target.getName()+".accountAutoLockOn", false);
 							this.getConfig().set(target.getName()+".accountLockOn", false);
 							this.saveConfig();
-							lockedPlayers.remove(target);
+							lockedPlayers.remove(target.getName());
 							target.setVelocity(defaultVelocity);
 							target.setFallDistance(0);
 							p.sendMessage(ChatColor.RED+
@@ -253,6 +298,19 @@ public class AccountLockMain extends JavaPlugin {
 							return true;
 						}
 					}
+					if(!playerOnline){
+						this.getConfig().set(args[1]+".accountAutoLockOn", false);
+						this.getConfig().set(args[1]+".accountLockOn", false);
+						this.saveConfig();
+						lockedPlayers.remove(args[1]);
+						p.sendMessage(ChatColor.RED+
+								"[AccountLock]"+ChatColor.WHITE+" - " +
+										"Player \""+args[1]+"\" is offline, " +
+										"however their account has still been UNlocked");
+						return true;
+						
+					}
+					return true;
 				}
 			return false;
 			}
@@ -260,12 +318,14 @@ public class AccountLockMain extends JavaPlugin {
 			if(args[0].equals("lockR")){
 				// We are doing a remote lock
 				if(p.hasPermission("accountLock.admin")){ //If player has admin perms
+					boolean playerOnline = false;
 					for(Player onlinePlayer : this.getServer().getOnlinePlayers()){ 
-						if(onlinePlayer.getDisplayName().equals(args[1])){ 
+						if(onlinePlayer.getDisplayName().equals(args[1])){
+							playerOnline = true;
 							Player target = this.getServer().getPlayer(args[1]);
 							this.getConfig().set(target.getName()+".accountLockOn", true);
 							this.saveConfig();
-							lockedPlayers.add(target);
+							lockedPlayers.add(target.getName());
 							p.sendMessage(ChatColor.RED+
 									"[AccountLock]"+ChatColor.WHITE+" - " +
 											"Player \""+target.getDisplayName()+"\"'s account has been locked");
@@ -275,6 +335,18 @@ public class AccountLockMain extends JavaPlugin {
 							
 						}
 					}
+					if(!playerOnline){
+						this.getConfig().set(args[1]+".accountAutoLockOn", true);
+						this.getConfig().set(args[1]+".accountLockOn", true);
+						this.saveConfig();
+						p.sendMessage(ChatColor.RED+
+								"[AccountLock]"+ChatColor.WHITE+" - " +
+										"Player \""+args[1]+"\" is offline, " +
+										"however their account has still been locked");
+						return true;
+						
+					}
+					return true;
 				}
 				else{
 					p.sendMessage(ChatColor.RED+"[AccountLock]"+ChatColor.WHITE+" - You don't have permission to do this");

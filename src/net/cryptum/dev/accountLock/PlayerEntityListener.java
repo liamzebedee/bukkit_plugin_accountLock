@@ -18,7 +18,7 @@ public class PlayerEntityListener extends EntityListener {
 	}
 	
 	public boolean accountLockOn(Player p){
-		if(plugin.lockedPlayers.contains(p)){
+		if(plugin.lockedPlayers.contains(p.getName())){
 			return true;
 		}
 		return false;
