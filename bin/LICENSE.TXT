@@ -1,7 +1,7 @@
 A plugin for the Minecraft Server Mod Bukkit,
 which adds a second layer of security, incorporating passwords in-game
 
-@version 0.2
+@version 0.2.1
 @author liamzebedee
 
 Created by Liam Edwards-Playne

@@ -28,4 +28,3 @@ public class AccountLockedAlert implements Runnable {
     }
 	
 }
-

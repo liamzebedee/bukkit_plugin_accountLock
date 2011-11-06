@@ -17,14 +17,23 @@ import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
+
+import ru.tehkode.permissions.PermissionManager;
+import ru.tehkode.permissions.bukkit.PermissionsEx;
  
 public class AccountLockMain extends JavaPlugin {
  
 	Logger log = Logger.getLogger("Minecraft");
 	ArrayList<String> lockedPlayers = new ArrayList<String>();
 	Vector defaultVelocity = new Vector(-4.9E-324,-0.0784000015258789,4.9E-324);
- 
+	public enum permissionSystems {bukkit,ex}
+	permissionSystems permissionSystem = permissionSystems.bukkit;
+	
 	public void onEnable(){
+		log.info("[AccountLock] Finding permissions system to use...");	
+		if(this.getServer().getPluginManager().isPluginEnabled("PermissionsEx")){
+			this.permissionSystem = permissionSystems.ex;
+		}
 		this.getConfig();
 		PluginManager pm = this.getServer().getPluginManager();
 		PlayerActionListener playerActionListener = new PlayerActionListener(this);
@@ -103,7 +112,7 @@ public class AccountLockMain extends JavaPlugin {
 				p.sendMessage("/account lock");
 				p.sendMessage("/account unlock [password]");
 				p.sendMessage("/account killLock [password]");
-				if(p.hasPermission("accountLock.admin")){
+				if(hasPermission(p,"accountLock.admin")){
 					p.sendMessage("/account lockR [displayName]");
 					p.sendMessage("/account unlockR [displayName]");
 					p.sendMessage("/account resetPassword [displayName]");
@@ -112,7 +121,7 @@ public class AccountLockMain extends JavaPlugin {
 				return true;
 			}
 			
-			if(args[0].equals("status") && p.hasPermission("accountLock.admin")){
+			if(args[0].equals("status") && hasPermission(p,"accountLock.admin")){
 				String playerName = args[1];
 				if(this.getConfig().getBoolean(playerName+".accountAutoLockOn") || this.getConfig().getBoolean(playerName+".accountLockOn")){
 					p.sendMessage(ChatColor.RED+
@@ -126,7 +135,7 @@ public class AccountLockMain extends JavaPlugin {
 				}
 			}
 			
-			if(args[0].equals("help") && p.hasPermission("accountLock.basic")){
+			if(args[0].equals("help") && hasPermission(p,"accountLock.basic")){
 				if(args.length <= 1){
 					p.sendMessage(ChatColor.RED+
 					"[AccountLock]");
@@ -159,27 +168,27 @@ public class AccountLockMain extends JavaPlugin {
 					p.sendMessage("killLock [password]");
 					p.sendMessage("Unlocks your account for all future logins. Requires authenitcation with password");
 				}
-				if(helpCommand.equals("lockR") && p.hasPermission("accountLock.admin")){
+				if(helpCommand.equals("lockR") && hasPermission(p,"accountLock.admin")){
 					p.sendMessage(ChatColor.RED+
 					"[AccountLock]");
 					p.sendMessage("lockR [displayName]");
 					p.sendMessage("Remotely locks a persons account by their displayName" +
 							"If they are offline, it uses the displayName as their username instead");
 				}
-				if(helpCommand.equals("unlockR") && p.hasPermission("accountLock.admin")){
+				if(helpCommand.equals("unlockR") && hasPermission(p,"accountLock.admin")){
 					p.sendMessage(ChatColor.RED+
 					"[AccountLock]");
 					p.sendMessage("unlockR [displayName]");
 					p.sendMessage("Remotely UNlocks a persons account by their displayName");
 				}
-				if(helpCommand.equals("resetPassword") && p.hasPermission("accountLock.admin")){
+				if(helpCommand.equals("resetPassword") && hasPermission(p,"accountLock.admin")){
 					p.sendMessage(ChatColor.RED+
 					"[AccountLock]");
 					p.sendMessage("lockR [displayName]");
 					p.sendMessage("Remotely resets a persons account password by their displayName" +
 							"If they are offline, it uses the displayName as their username instead");
 				}
-				if(helpCommand.equals("status") && p.hasPermission("accountLock.admin")){
+				if(helpCommand.equals("status") && hasPermission(p,"accountLock.admin")){
 					p.sendMessage(ChatColor.RED+
 					"[AccountLock]");
 					p.sendMessage("status [displayName]");
@@ -188,7 +197,7 @@ public class AccountLockMain extends JavaPlugin {
 				}
 			}
 			
-			if(args[0].equals("setPassword") && p.hasPermission("accountLock.basic")){
+			if(args[0].equals("setPassword") && hasPermission(p,"accountLock.basic")){
 				String password = args[1];
 				if(this.getConfig().getString(p.getName()+".accountPasswordHash") != null){
 					p.sendMessage(ChatColor.RED+
@@ -204,7 +213,7 @@ public class AccountLockMain extends JavaPlugin {
 				return true;
 			}
 			
-			if(args[0].equals("lock") && p.hasPermission("accountLock.basic")){
+			if(args[0].equals("lock") && hasPermission(p,"accountLock.basic")){
 					if(this.getConfig().getString(p.getName()+".accountPasswordHash") != null){
 						this.getConfig().set(p.getName()+".accountLockOn", true);
 						this.getConfig().set(p.getName()+".accountAutoLockOn", true);
@@ -223,7 +232,7 @@ public class AccountLockMain extends JavaPlugin {
 					}
 			}
 			
-			if(args[0].equals("tempLock") && p.hasPermission("accountLock.basic")){
+			if(args[0].equals("tempLock") && hasPermission(p,"accountLock.basic")){
 				if(this.getConfig().getString(p.getName()+".accountPasswordHash") != null){
 					this.getConfig().set(p.getName()+".accountLockOn", true);
 					this.saveConfig();
@@ -241,7 +250,7 @@ public class AccountLockMain extends JavaPlugin {
 				}
 			}
 			
-			if(args[0].equals("killLock") && p.hasPermission("accountLock.basic")){
+			if(args[0].equals("killLock") && hasPermission(p,"accountLock.basic")){
 				this.getConfig().set(p.getName()+".accountAutoLockOn", false);
 				this.getConfig().set(p.getName()+".accountLockOn", false);
 				this.saveConfig();
@@ -252,7 +261,7 @@ public class AccountLockMain extends JavaPlugin {
 				return true;
 			}
 			
-			if(args[0].equals("unlock") && p.hasPermission("accountLock.basic")){
+			if(args[0].equals("unlock") && hasPermission(p,"accountLock.basic")){
 				
 				if(args.length < 2){args[1] = "";}
 				String inputPassword = getMD5(args[1]);
@@ -278,7 +287,7 @@ public class AccountLockMain extends JavaPlugin {
 			
 			if(args[0].equals("unlockR")){
 				// We are doing a remote unlock
-				if(p.hasPermission("accountLock.admin")){ //If player has admin perms
+				if(hasPermission(p,"accountLock.admin")){ //If player has admin perms
 					boolean playerOnline = false;
 					for(Player onlinePlayer : this.getServer().getOnlinePlayers()){ 
 						if(onlinePlayer.getDisplayName().equals(args[1])){ 
@@ -317,7 +326,7 @@ public class AccountLockMain extends JavaPlugin {
 			
 			if(args[0].equals("lockR")){
 				// We are doing a remote lock
-				if(p.hasPermission("accountLock.admin")){ //If player has admin perms
+				if(hasPermission(p,"accountLock.admin")){ //If player has admin perms
 					boolean playerOnline = false;
 					for(Player onlinePlayer : this.getServer().getOnlinePlayers()){ 
 						if(onlinePlayer.getDisplayName().equals(args[1])){
@@ -355,7 +364,7 @@ public class AccountLockMain extends JavaPlugin {
 			
 			if(args[0].equals("resetPassword")){
 				// We are doing a remote lock
-				if(p.hasPermission("accountLock.admin")){ //If player has admin perms
+				if(hasPermission(p,"accountLock.admin")){ //If player has admin perms
 					for(Player onlinePlayer : this.getServer().getOnlinePlayers()){ 
 						if(onlinePlayer.getDisplayName().equals(args[1])){ 
 							Player target = this.getServer().getPlayer(args[1]);
@@ -379,7 +388,19 @@ public class AccountLockMain extends JavaPlugin {
 			return true;
 		}
 		
-		
 		return false; 
 	}
+	
+	public boolean hasPermission(Player p, String permission){
+		boolean has = false;
+		switch(this.permissionSystem){
+		case bukkit:
+			has = p.hasPermission(permission);
+		case ex:
+			PermissionManager permissionsEx = PermissionsEx.getPermissionManager();
+			has = permissionsEx.has(p, permission);
+		}
+		return has;
+	}
+	
 }
