@@ -1,11 +1,7 @@
 package net.cryptum.dev.accountLock;
 
 import java.util.Timer;
-import java.util.TimerTask;
-
 import org.bukkit.ChatColor;
-import org.bukkit.Server;
-import org.bukkit.entity.Player;
 
 public class AccountLockedAlert implements Runnable {
 	Timer timer;

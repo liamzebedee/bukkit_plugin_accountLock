@@ -1,12 +1,7 @@
 package net.cryptum.dev.accountLock;
 
-import java.awt.Color;
-
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.*;
-
-import net.cryptum.dev.accountLock.*;
 
 
 

@@ -1,11 +1,11 @@
 name: AccountLock
 main: net.cryptum.dev.accountLock.AccountLockMain
-version: 0.1
+version: 0.3
 description: Allows you to password protect your account within the server, added security
 commands:
-     account:
-        description: Account management functions
-        permissions: accountLock.basic
+     alock:
+        description: Account management functions 
         usage: |
-           /<account> [setPassword]|[lock]|[unlock]|[lockR]|[unlockR]|[resetPassword]
+           /<alock> [setPassword]|[lock]|[unlock]|[lockR]|[unlockR]|[resetPassword]
+depend: [Vault]            
     

@@ -1,0 +1,1 @@
+Extract these to your plugins folder. Vault.jar is an API needed by AccountLock
